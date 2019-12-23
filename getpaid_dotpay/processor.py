@@ -40,7 +40,7 @@ class PaymentProcessor(BaseProcessor):
         if email is not None:
             extra_args["email"] = email
 
-        return dict(
+        params = dict(
             id=self.get_setting("seller_id"),
             amount=self.payment.amount.quantize(Decimal(".01")),
             currency=self.payment.currency.upper(),
@@ -53,6 +53,10 @@ class PaymentProcessor(BaseProcessor):
             **extra_args,
         )
 
+        params["chk"] = self.calculate_chk(params)
+
+        return params
+
     def get_redirect_url(self):
         if settings.DEBUG:
             return self.sandbox
@@ -63,15 +67,80 @@ class PaymentProcessor(BaseProcessor):
             "getpaid:{}:return-view".format(self.slug), kwargs=dict(pk=self.payment.pk)
         )
 
-    def handle_callback(self, request, *args, **kwargs):
-        data = request.POST
+    def calculate_chk(self, data):
+        ordered_fields = [
+            "api_version",
+            "charset",
+            "lang",
+            "id",
+            "amount",
+            "currency",
+            "description",
+            "control",
+            "channel",
+            "credit_card_brand",
+            "ch_lock",
+            "channel_groups",
+            "onlinetransfer",
+            "URL",
+            "type",
+            "buttontext",
+            "URLC",
+            "firstname",
+            "lastname",
+            "email",
+            "street",
+            "street_n1",
+            "street_n2",
+            "state",
+            "addr3",
+            "city",
+            "postcode",
+            "phone",
+            "country",
+            "code",
+            "p_info",
+            "p_email",
+            "n_email",
+            "expiration_date",
+            "deladdr",
+            "recipient_account_number",
+            "recipient_company",
+            "recipient_first_name",
+            "recipient_last_name",
+            "recipient_address_street",
+            "recipient_address_building",
+            "recipient_address_apartment",
+            "recipient_address_postcode",
+            "recipient_address_city",
+            "application",
+            "application_version",
+            "warranty",
+            "bylaw",
+            "personal_data",
+            "credit_card_number",
+            "credit_card_expiration_date_year",
+            "credit_card_expiration_date_month",
+            "credit_card_security_code",
+            "credit_card_store",
+            "credit_card_store_security_code",
+            "credit_card_customer_id",
+            "credit_card_id",
+            "blik_code",
+            "credit_card_registration",
+            "recurring_frequency",
+            "recurring_interval",
+            "recurring_start",
+            "recurring_count",
+            "surcharge_amount",
+            "surcharge",
+            "ignore_last_payment_channel",
+            "customer",
+        ]
 
-        self.context["external_id"] = data.get("operation_number", "")
+        return self._get_sha256(ordered_fields, data)
 
-        control = data.get("control", "")
-        status = data.get("operation_status", "")
-        signature = data.get("signature", "")
-
+    def calculate_signature(data):
         ordered_fields = [
             "id",
             "operation_number",
@@ -101,11 +170,25 @@ class PaymentProcessor(BaseProcessor):
             "geoip_country",
         ]
 
+        return self._get_sha256(ordered_fields, data)
+
+    def _get_sha256(fields, data):
         values = (
             self.get_setting("pin"),
-            *[data.get(field, "") for field in ordered_fields],
+            *[str(data.get(field, "")) for field in ordered_fields],
         )
-        values_hash = hashlib.sha256("".join(values).encode("utf-8")).hexdigest()
+        return hashlib.sha256("".join(values).encode("utf-8")).hexdigest()
+
+    def handle_callback(self, request, *args, **kwargs):
+        data = request.POST
+
+        self.context["external_id"] = data.get("operation_number", "")
+
+        control = data.get("control", "")
+        status = data.get("operation_status", "")
+        signature = data.get("signature", "")
+
+        values_hash = self.calculate_signature(data)
 
         if values_hash != signature:
             return HttpResponseBadRequest("BAD SIGNATURE")
