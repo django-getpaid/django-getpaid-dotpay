@@ -1,65 +1,35 @@
-=============================
-Getpaid-Dotpay
-=============================
+.. warning::
 
-.. image:: https://badge.fury.io/py/getpaid-dotpay.svg
-    :target: https://badge.fury.io/py/getpaid-dotpay
+    **This package has been discontinued.**
 
-.. image:: https://travis-ci.org/django-getpaid/getpaid-dotpay.svg?branch=master
-    :target: https://travis-ci.org/django-getpaid/getpaid-dotpay
+=====================
+django-getpaid-dotpay
+=====================
 
-.. image:: https://codecov.io/gh/django-getpaid/getpaid-dotpay/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/django-getpaid/getpaid-dotpay
+This package is no longer maintained. Dotpay has **closed down their services
+after merging with Przelewy24**. If you were using Dotpay, you should migrate
+to the Przelewy24 gateway using the new ``python-getpaid`` ecosystem.
 
-Dotpay backend for django-getpaid
+Migration
+=========
 
-Documentation
--------------
+Replace ``django-getpaid-dotpay`` with the following packages:
 
-The full documentation is at https://getpaid-dotpay.readthedocs.io.
+1. `python-getpaid-core <https://pypi.org/project/python-getpaid-core/>`_ —
+   framework-agnostic payment processing library
+2. `django-getpaid <https://pypi.org/project/django-getpaid/>`_ — Django
+   framework adapter
+3. `python-getpaid-przelewy24 <https://pypi.org/project/python-getpaid-przelewy24/>`_ —
+   Przelewy24 gateway plugin (successor to Dotpay)
 
-Quickstart
-----------
+.. code-block:: shell
 
-Install Getpaid-Dotpay::
+    pip install python-getpaid-core django-getpaid python-getpaid-przelewy24
 
-    pip install getpaid-dotpay
+For more information, visit the
+`python-getpaid GitHub organization <https://github.com/django-getpaid>`_.
 
-Add it to your `INSTALLED_APPS`:
+License
+=======
 
-.. code-block:: python
-
-    INSTALLED_APPS = (
-        ...
-        'getpaid',
-        'getpaid_dotpay',
-        ...
-    )
-
-
-Features
---------
-
-* TODO
-
-Running Tests
--------------
-
-Does the code actually work?
-
-::
-
-    source <YOURVIRTUALENV>/bin/activate
-    (myenv) $ pip install tox
-    (myenv) $ tox
-
-Credits
--------
-
-Tools used in rendering this package:
-
-*  Cookiecutter_
-*  `cookiecutter-djangopackage`_
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`cookiecutter-djangopackage`: https://github.com/pydanny/cookiecutter-djangopackage
+MIT
